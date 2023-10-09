@@ -18,12 +18,12 @@ use serde::{Deserialize, Serialize};
 /// println!("Rolled {}: {}", dice_exp, dice_roll);
 /// println!("The average result is {:.1}", dice_roll.average);
 /// ```
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct DiceBag <R: rand::Rng + Clone + Debug + PartialEq + Eq>{
+#[derive(Debug, Clone, PartialEq)]
+pub struct DiceBag <R: rand::Rng + Clone + Debug + PartialEq>{
 	rng: R
 }
 
-impl <R> DiceBag<R> where R: rand::Rng + Clone + Debug + PartialEq + Eq {
+impl <R> DiceBag<R> where R: rand::Rng + Clone + Debug + PartialEq {
 	/// Constructs a new `DiceBag` instance
 	/// # Parameters
 	/// * `rng`: A random number generator to use for rolling dice
