@@ -1,0 +1,34 @@
+[package]
+name = "dicexp"
+authors = ["Christopher Collin Hall"]
+version = "0.1.0"
+edition = "2021"
+license = "MPL-2.0"
+description = "A Dice Expression Interpreter program and library for parsing (and rolling) role-playing game style dice notations (e.g. 2d8+5)"
+repository = "https://github.com/DrPlantabyte/DiceXp-rs.git"
+homepage = "https://github.com/DrPlantabyte/DiceXp-rs.git"
+readme = "README.md"
+#documentation = "https://docs.rs/dicexp/"
+keywords = ["dice", "TTRPG"]
+categories = ["text-processing"] # see https://crates.io/category_slugs
+
+
+[dependencies]
+# general deps
+serde = {optional = true, version = "1.0", features = ["derive"]}
+bytemuck = "1.13"
+rand = "0.8.5"
+# CLI deps
+clap = {optional = true,  version = "4.3", features = ["std", "color", "help", "usage", "error-context", "suggestions", "derive", "unicode", "wrap_help"] }
+
+[features]
+app = ["clap"]
+
+[lib]
+name = "dicexp"
+path = "src/lib.rs"
+
+[[bin]]
+name = "dicexp"
+path = "src/app.rs"
+required-features = ["app"]
