@@ -26,14 +26,14 @@ When **DiceXp** evaluates a dice expression, it also computes what the statistic
 | CLI App               | ✔     | ✔   |
 | Roll standard dice    | ✔     | ✔   |
 | Add and substract     | ✔     | ✔   |
-| Multiply              | ✔     | ~   |
+| Multiply              | ✔     | **   |
 | Divide                | ✔     |     |
 | Nested parentheses    | ✔     |     |
 | Exploding dice        |        | ✔   |
 | Keep N highest/lowest |        | ✔   |
 | Average, min, and max | ✔      |     |
 
-*~ ndm can only multiply dice by constants, not by other dice*
+** ndm can only multiply dice by constants, not by other dice
 
 # DiceXp CLI App
 The `dicexp` CLI app evaluates dice expressions provided as arguments on the commandline. For example:
