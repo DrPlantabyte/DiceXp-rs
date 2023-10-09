@@ -2,6 +2,7 @@
 use std::error::Error;
 use core::fmt::{Debug, Formatter};
 use std::collections::HashSet;
+use std::hash::Hasher;
 use std::num::{ParseFloatError, ParseIntError};
 use rand;
 use rand::RngCore;
@@ -9,6 +10,10 @@ use rand::RngCore;
 use serde::{Deserialize, Serialize};
 
 /// The DiceBag struct is use to evaluate RPG dice notation expressions (eg "2d6+3")
+///
+/// If the provided RNG implements any of `Debug`, `Clone`, `PartialEq`, `Eq`, `Hash`, or `Default`,
+/// then `DiceBag` will implement the same.
+///
 /// # Example
 /// ```
 /// use dicexp::{DiceBag, new_simple_rng};
@@ -18,12 +23,43 @@ use serde::{Deserialize, Serialize};
 /// println!("Rolled {}: {}", dice_exp, dice_roll);
 /// println!("The average result is {:.1}", dice_roll.average);
 /// ```
-#[derive(Debug, Clone, PartialEq)]
-pub struct DiceBag <R: rand::Rng + Clone + Debug + PartialEq>{
+pub struct DiceBag <R: rand::Rng>{
 	rng: R
 }
+impl <R>Clone for DiceBag<R> where R: rand::Rng+Clone{
+	fn clone(&self) -> Self {
+		DiceBag{rng: self.rng.clone()}
+	}
+}
+impl <R>Debug for DiceBag<R> where R: rand::Rng+Debug{
+	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+		write!(f, "DiceBag{{")?;
+		self.rng.fmt(f)?;
+		write!(f, "}}")
+	}
+}
 
-impl <R> DiceBag<R> where R: rand::Rng + Clone + Debug + PartialEq {
+impl <R>PartialEq for DiceBag<R> where R: rand::Rng+PartialEq{
+	fn eq(&self, other: &Self) -> bool {
+		self.rng.eq(&other.rng)
+	}
+}
+
+impl <R>Eq for DiceBag<R> where R: rand::Rng+Eq{}
+
+impl <R> std::hash::Hash for DiceBag<R> where R: rand::Rng+std::hash::Hash{
+	fn hash<H: Hasher>(&self, state: &mut H) {
+		self.rng.hash(state)
+	}
+}
+
+impl <R>Default for DiceBag<R> where R: rand::Rng+Default{
+	fn default() -> Self {
+		DiceBag{rng: R::default()}
+	}
+}
+
+impl <R> DiceBag<R> where R: rand::Rng {
 	/// Constructs a new `DiceBag` instance
 	/// # Parameters
 	/// * `rng`: A random number generator to use for rolling dice
