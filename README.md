@@ -1,22 +1,22 @@
 # DiceXp - The RPG Dice eXpression interpreter
 **DiceXp** is a library and command-line interface (CLI) app for parsing and rolling role-playing game style dice notations (e.g. "2d8+5").
 
-There are two components to this crate: the CLI app and hte library module. The CLI app can be installed with `cargo install dicexp` and then used in the terminal to roll dice. The library provides a `DiceBag` struct which you initialize with a random number generator (RNG) from the [rand crate](https://crates.io/crates/rand) and then call `DiceBag.eval(...)` on each dice expression you wish to evaluate.
+There are two components to this crate: the CLI app and the library module. The CLI app can be installed with `cargo install dicexp` and then used in the terminal to roll dice. The library provides a `DiceBag` struct which you initialize with a random number generator (RNG) from the [rand crate](https://crates.io/crates/rand) and then call `DiceBag.eval(...)` on each dice expression you wish to evaluate.
 
 ### Roll dice with standard RPG dice notation
 **DiceXp** supports standard RPG dice notation, such as "1d20+3" or "3d6", where the number in front of the 'd' is the number of dice to roll and the number after the 'd' is the number of sides per die. You can use as many different kinds of dice as you like, such as "1d4+1d6+1d8-1d12".
 
 ### Arithmetic (+, -, *, /)
-**DiceXp** supports basic arithmetic, specifically addition (+), subtraction (-), mutliplication (* or x), and division (/). Note that division is *integer division*, (unless computing the average, see below), meaning that it always rounds down to a whole number. **DiceXp** also supports nested parenthese. Thus all of the following are valid `dicexp` expressions:
+**DiceXp** supports basic arithmetic, specifically addition (+), subtraction (-), multiplication (* or x), and division (/). Note that division is *integer division*, (unless computing the average, see below), meaning that it always rounds down to a whole number. **DiceXp** also supports nested parentheses. Thus all of the following are valid `dicexp` expressions:
 
 * "1d4*1d20"
 * "-3*(1+2)"
 * "(1d10+5)x10+(1d20-10)"
 * "4d6/10-5"
-* "4(9(10/2-6-3*8+1*4/2)*8/2*5+4)*5+4(7+7-3*8)*3-10*(10)-1"
+* "4(9(10/2-6-3x8+1x4/2)x8/2x5+4)x5+4(7+7-3x8)x3-10x(10)-1"
 
 ### Average, min, and max values
-When **DiceXp** evaluates a dice expression, it also computes what the statistical average result of the dice rools would be, as well as the largest and smallest possible values (ie what if all dice rolled their maximum value or rolled all 1's).
+When **DiceXp** evaluates a dice expression, it also computes what the statistical mean average result of the dice rolls would be, as well as the largest and smallest possible values (ie what if all dice rolled their maximum value or rolled all 1's).
 
 ## Alternatives to DiceXp
 **DiceXp** was designed for standard dice notation and designed to handle relatively complex mathematical dice formulas. It does not support all RPG systems or dice rolling mechanics (eg roll two dice and keep the higher one). The best alternative to **DiceXp** is the [ndm](https://crates.io/crates/ndm) crate, which better supports table-top RPGs. Here's a side-by-side feature comparison to [ndm](https://crates.io/crates/ndm):
@@ -32,6 +32,7 @@ When **DiceXp** evaluates a dice expression, it also computes what the statistic
 | Exploding dice        |        | ✔   |
 | Keep N highest/lowest |        | ✔   |
 | Average, min, and max | ✔      |     |
+
 *~ ndm can only multiply dice by constants, not by other dice*
 
 # DiceXp CLI App
