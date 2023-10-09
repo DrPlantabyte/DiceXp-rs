@@ -51,9 +51,10 @@ $ dicexp 1d6 1d6 1d6 1d6
 >>> 1d6 => 1
 ```
 
-You can also print the range of possible values for the dice expressions with the `-r/--range` option and the average result with the `-a--average` option:
+You can also print the range of possible values for the dice expressions with the `-r/--range` option and the average result with the `-a/--average` option:
 ```
-$ 
+$ dicexp -a -r 3d6
+>>> 3d6 => 12 (3-18, 10.5 ave.)
 ```
 
 ## Installation
