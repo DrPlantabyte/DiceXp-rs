@@ -69,7 +69,7 @@ cargo install dicexp
 ### Options
  * `-a`, `--average`:        Show the average result for each dice expression
 * `-r`, `--range`:           Show the minimum and maximum possible result for each dice expression
-* `-q`, `--quiet`:           Show only the roll results and nothing more (incompatible with `-a/--average` and `-r/--range`
+* `-q`, `--quiet`:           Show only the roll results and nothing more (incompatible with `-a/--average` and `-r/--range`)
 * `-s`, `--seed` <INTEGER>:  Optional seed for random number generator
 * `-h`, `--help`:            Print help
 * `-V`, `--version`:         Print version
@@ -78,7 +78,7 @@ cargo install dicexp
 The **DiceXp** library module provides three structs: `DiceBag`, `DiceRoll`, and `SyntaxError`. It also provides two utility functions to simplify instantiating a new RNG: `simple_rng(u64) -> StdRng` and `new_simple_rng() -> StdRng`.
 
 ### Struct DiceBag
-Most of the time, you only need to use the `DiceBag` struct. `DiceBag` is instantiated with the RNG of your choice via `DiceBag::new(Rng)` and then is ready to use. To evaluate a dice expression, use the `eval(&str)` method, or to only evaluate the roll, min, max, or average result, use the matching `eval_...(&str)` method.
+Most of the time, you only need to use the `DiceBag` struct. `DiceBag` is instantiated with the RNG of your choice via `DiceBag::new(Rng)` and then is ready to use. To evaluate a dice expression, use the `eval(&str)` method, or to only evaluate the min, max, or average result, use the matching `eval_...(&str)` method.
 
 ### Struct DiceRoll
 This is returned by `DiceBag.eval(&str)` and holds the rolled total, as well as the min, max, and average for the expression.
@@ -92,7 +92,7 @@ This error type is the `Err()` result whenever a `DiceBag` method fails to evalu
 This example prompts the user to enter a dice expression, then evaluates it. If the roll total is greater than the expected average, it tells prints "That's a good roll!", but if not then it prints "That's not a good roll :("
 ```rust
 fn main() {
-	use crate::{DiceBag, new_simple_rng};
+	use dicexp::{DiceBag, new_simple_rng};
 	use std::io;
 	let mut dice_bag = DiceBag::new(new_simple_rng());
 	println!("What would you like to roll? ");
@@ -114,7 +114,7 @@ fn main() {
 This example compares the average damage for various weapons from the table-top RPG Dungeons & Dragons (aka D&D).
 ```rust
 fn main() {
-	use crate::{DiceBag, new_simple_rng};
+	use dicexp::{DiceBag, new_simple_rng};
 	let mut dice_bag = DiceBag::new(new_simple_rng());
 	let armory = vec![
 		("great axe", "1d12"),

@@ -16,7 +16,7 @@ pub struct Args {
 	/// Show the minimum and maximum possible result for each dice expression
 	#[arg(short='r', long="range")]
 	show_range: bool,
-	/// Show only the roll results and nothing more (incompatible with -a/--average and -r/--range
+	/// Show only the roll results and nothing more (incompatible with -a/--average and -r/--range)
 	#[arg(short='q', long="quiet")]
 	quiet: bool,
 	/// Optional seed for random number generator
