@@ -23,7 +23,7 @@ pub struct Args {
 	#[arg(short='s', long="seed")]
 	seed: Option<u64>,
 	/// One or more RPG dice notation expressions to evaluate (eg "1d20+3")
-	expressions: Vec<String>
+	dice_expressions: Vec<String>
 }
 
 /// Entry point for the CLI app
@@ -39,12 +39,12 @@ pub fn main() -> Result<(), Box<dyn Error>> {
 /// Runs the program, return a list of results for each expression
 pub fn run(args: Args) -> Result<Vec<String>, Box<dyn Error>>  {
 	let mut dice: DiceBag<rand::rngs::StdRng>;
-	let mut results: Vec<String> = Vec::with_capacity(args.expressions.len());
+	let mut results: Vec<String> = Vec::with_capacity(args.dice_expressions.len());
 	match args.seed {
 		None => dice = DiceBag::new(new_simple_rng()),
 		Some(seed) => dice = DiceBag::new(simple_rng(seed)),
 	}
-	for exp in &args.expressions {
+	for exp in &args.dice_expressions {
 		let mut output = String::new();
 		let roll = dice.eval(exp.as_str())?;
 		if ! args.quiet {
