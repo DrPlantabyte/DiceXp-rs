@@ -1,7 +1,7 @@
 # DiceXp - The RPG Dice eXpression interpreter
 **DiceXp** is a library and command-line interface (CLI) app for parsing and rolling role-playing game style dice notations (e.g. "2d8+5").
 
-There are two components to this crate: the CLI app and the library module. The CLI app can be installed with `cargo install dicexp` and then used in the terminal to roll dice. The library provides a `DiceBag` struct which you initialize with a random number generator (RNG) from the [rand crate](https://crates.io/crates/rand) and then call `DiceBag.eval(...)` on each dice expression you wish to evaluate.
+There are two components to this crate: the CLI app and the library module. The CLI app can be installed with `cargo install dicexp --features app` and then used in the terminal to roll dice. The library provides a `DiceBag` struct which you initialize with a random number generator (RNG) from the [rand crate](https://crates.io/crates/rand) and then call `DiceBag.eval(...)` on each dice expression you wish to evaluate.
 
 ### Roll dice with standard RPG dice notation
 **DiceXp** supports standard RPG dice notation, such as "1d20+3" or "3d6", where the number in front of the 'd' is the number of dice to roll and the number after the 'd' is the number of sides per die. You can use as many different kinds of dice as you like, such as "1d4+1d6+1d8-1d12".
@@ -60,7 +60,7 @@ $ dicexp -a -r 3d6
 ## Installation
 To install the `dicexp` app, simply run the following command:
 ```bash
-cargo install dicexp
+cargo install dicexp --features app
 ```
 
 ## Usage
