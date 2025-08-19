@@ -1,8 +1,8 @@
 [package]
 name = "dicexp"
 authors = ["Christopher Collin Hall"]
-version = "1.1.1"
-edition = "2021"
+version = "1.2.0"
+edition = "2024"
 license = "MPL-2.0"
 description = "A Dice Expression Interpreter program and library for parsing (and rolling) role-playing game style dice notations (e.g. \"2d8+5\")"
 repository = "https://github.com/DrPlantabyte/DiceXp-rs.git"
@@ -17,10 +17,10 @@ categories = ["text-processing"] # see https://crates.io/category_slugs
 # general deps
 serde = { version = "1.0", features = ["derive"], optional = true }
 serde_derive = { version = "1.0", optional = true }
-bytemuck = "1.13"
-rand = "0.8.5"
+bytemuck = "1.23"
+rand = "0.9.2"
 # CLI deps
-clap = {optional = true,  version = "4.3", features = ["std", "color", "help", "usage", "error-context", "suggestions", "derive", "unicode", "wrap_help"] }
+clap = {optional = true,  version = "4.5", features = ["std", "color", "help", "usage", "error-context", "suggestions", "derive", "unicode", "wrap_help"] }
 
 [features]
 app = ["clap"]
@@ -36,4 +36,4 @@ path = "src/app.rs"
 required-features = ["app"]
 
 [dev-dependencies]
-serde_json = "1.0.104"
+serde_json = "1.0"
