@@ -5,7 +5,6 @@ use std::collections::HashSet;
 use std::hash::Hasher;
 use std::num::{ParseFloatError, ParseIntError};
 use rand;
-use rand::RngCore;
 #[cfg(feature = "serde_support")]
 use serde::{Deserialize, Serialize};
 
@@ -73,7 +72,7 @@ impl <R> DiceBag<R> where R: rand::Rng {
 	pub fn roll(&mut self, n: u32, d: u32, m: i64) -> i64 {
 		let mut total = 0i64;
 		for _ in 0..n {
-			let roll: u32 = self.rng.gen_range(1..=d);
+			let roll: u32 = self.rng.random_range(1..=d);
 			total += roll as i64;
 		}
 		return total + m;
@@ -402,8 +401,8 @@ impl Error for SyntaxError {}
 /// # Parameters
 /// * `seed`: A 64-bit number to use as a seed
 pub fn simple_rng(seed: u64) -> rand::rngs::StdRng {
-	use rand::rngs::StdRng;
-	use rand::SeedableRng;
+	use rand::rngs::{StdRng};
+	use rand::{SeedableRng, TryRngCore};
 	let mut seeder_rng_seed: <StdRng as SeedableRng>::Seed = <StdRng as SeedableRng>::Seed::default();
 	let sub_seed: [u8; 8] = bytemuck::cast(seed);
 	for i in 0..seeder_rng_seed.len() {
@@ -411,7 +410,7 @@ pub fn simple_rng(seed: u64) -> rand::rngs::StdRng {
 	}
 	let mut seeder_rng = StdRng::from_seed(seeder_rng_seed);
 	let mut rng_seed: <StdRng as SeedableRng>::Seed = <StdRng as SeedableRng>::Seed::default();
-	seeder_rng.fill_bytes(&mut rng_seed);
+	seeder_rng.try_fill_bytes(&mut rng_seed).expect("Failed to seed RNG");
 	return StdRng::from_seed(rng_seed);
 }
 
@@ -481,7 +480,6 @@ fn find_one_of(text: &str, chars: &[char]) -> Option<usize> {
 
 #[cfg(test)]
 mod unit_tests {
-	use crate::DiceRoll;
 
 	#[test]
 	fn arithmatic_checks() {
