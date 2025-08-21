@@ -1,4 +1,6 @@
 #![deny(unused_must_use)]
+#![deny(missing_docs)]
+#![doc=include_str!("../README.md")]
 use std::error::Error;
 use core::fmt::{Debug, Formatter};
 use std::collections::HashSet;
@@ -7,6 +9,46 @@ use std::num::{ParseFloatError, ParseIntError};
 use rand;
 #[cfg(feature = "serde_support")]
 use serde::{Deserialize, Serialize};
+
+/// enum of various rules for rolling dice from various games
+pub enum DiceRollMechanic {
+	/// Normal dice rolling: roll all dice and add the numbers together
+	Standard,
+	/**
+	Exploding dice: when the highest (or specified) number ir rolled, add another die to the
+	dice pool and roll that one too (which can also explode). Note that the maximum possilble
+	value for an exploding dice roll is infinite, so the range is limited to the 99th percentile
+	(3 consecutive explosions for most dice), or more formally:
+	`N = ceil( log[0.001]/log[ (number of exploding numbers)/(number of sides on die) ] )`
+	*/
+	Exploding,
+	/// Same as `Exploding`, except with a limit on maximum number of dice added to the pool
+	ExplodeN,
+	/// Keep highest N dice and add them together
+	KeepHighest,
+	/// Keep lowest N dice and add them together
+	KeepLowest,
+	/// Drop highest N dice and add them together
+	DropHighest,
+	/// Drop lowest N dice and add them together
+	DropLowest,
+	/// Count: instead of summing the dice, return the number of times a given number or set of
+	/// numbers appears
+	Count,
+	/**
+	Max count: instead of summing the dice, return the number of repetitions for the number with the
+	most repetitions (eg if you roll three dice and get `[6, 4, 4]`, then the result will be `2`
+	because there are two 4's). This supports the dice mechanic from
+	[Burn Bryte](https://roll20.net/compendium/burnbryte/Skills#toc_5) where you don't sum the dice,
+	but instead a roll is a failure if the same number appears twice (or more) in the dice roll
+	*/
+	MaxCount,
+	/// Like `Standard`, except re-roll specific numbers on the die, using the new result even if it
+	/// is the same
+	ReRollOnce,
+	/// Like `Standard`, except re-roll specific numbers until they no longer come up
+	ReRoll,
+}
 
 /// The DiceBag struct is use to evaluate RPG dice notation expressions (eg "2d6+3")
 ///
@@ -76,6 +118,26 @@ impl <R> DiceBag<R> where R: rand::Rng {
 			total += roll as i64;
 		}
 		return total + m;
+	}
+	/// Rolls a number of dice with an optional dice roll mechanic
+	/// # Parameters
+	/// * `n`: number of dice to roll
+	/// * `d`: number of sides per die
+	/// * `rule`: a `DiceRollMechanic` specifying how to resolve the dice roll
+	pub fn roll_special(&mut self, n: u32, d: u32, rule: DiceRollMechanic) -> i64 {
+		match rule {
+			DiceRollMechanic::Standard => self.roll(n, d, 0),
+			DiceRollMechanic::Exploding => {todo!()}
+			DiceRollMechanic::ExplodeN => {todo!()}
+			DiceRollMechanic::KeepHighest => {todo!()}
+			DiceRollMechanic::KeepLowest => {todo!()}
+			DiceRollMechanic::DropHighest => {todo!()}
+			DiceRollMechanic::DropLowest => {todo!()}
+			DiceRollMechanic::Count => {todo!()}
+			DiceRollMechanic::MaxCount => {todo!()}
+			DiceRollMechanic::ReRollOnce => {todo!()}
+			DiceRollMechanic::ReRoll => {todo!()}
+		}
 	}
 
 	/// Evaluates the given RPG dice notation expression
@@ -186,18 +248,31 @@ impl <R> DiceBag<R> where R: rand::Rng {
 			}
 		}{}
 		// Dice
+		// TODO: capture dice roll mechanics modifiers
 		while match x.find("d") {
 			None => false,
 			Some(i) => {
 				let cpy =  x.clone();
 				let x_str = cpy.as_str();
 				let (start, end) = find_operator_params(x_str, i)?;
-				let n = &x_str[start..i].parse::<u32>().map_err(|e| SyntaxError::from(e.clone()))?;
-				let d = &x_str[i+1..end].parse::<u32>().map_err(|e| SyntaxError::from(e.clone()))?;
+				let n_str = &x_str[start..i];
+				let d_str = &x_str[i+1..end];
+				let n = n_str.parse::<u32>().map_err(|e| SyntaxError::from(e.clone()))?;
+				let mut is_fate_dice = false;
+				let mut d: u32;
+				let mut m: i64 = 0;
+				if d_str == "F" || d_str == "f" {
+					// FATE die, treat as Nd3-2*N
+					is_fate_dice = true;
+					d = 3;
+					m = -2 * n as i64;
+				} else {
+					d = *&x_str[i + 1..end].parse::<u32>().map_err(|e| SyntaxError::from(e.clone()))?;
+				}
 				let middle: String;
 				match mode {
-					EvalMode::Roll => middle = format!("{}", self.roll(*n, *d, 0)),
-					EvalMode::Average => middle = format!("{:.1}", *n as f64 * 0.5 * (1f64 + *d as f64)),
+					EvalMode::Roll => middle = format!("{}", self.roll(n, d, m)),
+					EvalMode::Average => middle = format!("{:.1}", n as f64 * 0.5 * (1f64 + d as f64)),
 					EvalMode::Minimum => middle = format!("{}", n),
 					EvalMode::Maximum => middle = format!("{}", n * d),
 				}
@@ -293,6 +368,18 @@ impl <R> DiceBag<R> where R: rand::Rng {
 
 }
 
+/// Util function to create a new DiceBag without any fuss
+pub fn new_dice_bag() -> DiceBag<rand::rngs::StdRng>  {
+	use rand::SeedableRng;
+	DiceBag{rng: rand::rngs::StdRng::from_os_rng()}
+}
+
+/// Util function to create a new DiceBag without any fuss
+pub fn new_dice_bag_from_seed(seed: u64) -> DiceBag<rand::rngs::StdRng>  {
+	use rand::SeedableRng;
+	DiceBag{rng: rand::rngs::StdRng::seed_from_u64(seed)}
+}
+
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum EvalMode {
 	Roll, Average, Minimum, Maximum
@@ -322,9 +409,13 @@ impl core::fmt::Display for DiceRoll {
 
 /// Error returns when a `DiceBag` fails to interpret or evaluate a dice expression
 pub struct SyntaxError {
+	/// error message
 	pub msg: Option<String>,
+	/// line where the error occured, if known
 	pub line: Option<u64>,
+	/// column where the error occured, if known
 	pub col: Option<u64>,
+	/// other error that caused this one, if applicable
 	pub cause: Option<Box<dyn Error>>
 }
 
@@ -454,6 +545,7 @@ fn find_operator_params(text: &str, op_pos: usize) -> Result<(usize, usize), Syn
 	let front_slice = &text[0..op_pos];
 	let back_slice = &text[op_pos+1..];
 	let mut end = text.len();
+	// TODO: capture dice roll mechanics modifiers
 	for (i, c) in back_slice.char_indices() {
 		if !(c.is_digit(10) || c == '.' || c == '-') {end = op_pos+1+i; break;}
 	}
