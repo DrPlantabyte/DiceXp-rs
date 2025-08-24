@@ -19,7 +19,7 @@ pub enum DiceRollMechanic {
 	dice pool and roll that one too (which can also explode). Note that the maximum possilble
 	value for an exploding dice roll is infinite, so the range is limited to the 99th percentile
 	(3 consecutive explosions for most dice), or more formally:
-	`N = ceil( log[0.001]/log[ (number of exploding numbers)/(number of sides on die) ] )`
+	`N = ceil( log[0.01]/log[ (number of exploding numbers)/(number of sides on die) ] )`
 	*/
 	Exploding,
 	/// Same as `Exploding`, except with a limit on maximum number of dice added to the pool

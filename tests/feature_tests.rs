@@ -75,21 +75,31 @@ fn fate_dice() {
 
 #[test]
 fn exploding_dice_unlimited() {
+	use std::collections::HashMap;
 	let mut dice_bag = dicexp::new_dice_bag_from_seed(12345);
-	let exp = "1d6";
-	let expected = dicexp::DiceRoll{min: 1, max: 6 * 4, average: 3.5 + (1./6.)*(6.+3.5), total: 0};
-	let mut sum = 0;
-	let reps = 1000;
-	for _ in 0..reps {
-		let result = dice_bag.eval("(1d%-1)*10+(1d10-1)").unwrap();
-		assert_eq!(result.average, 499.5, "wrong average");
-		assert_eq!(result.min, 0, "wrong min");
-		assert_eq!(result.max, 999, "wrong max");
-		assert!(result.total >= result.min && result.total <= result.max, "total out of expected range");
-		sum += result.total;
+	let max_explodes_by_die_type = HashMap::<i64, u32>::from([
+		(2,7),
+		(4,4),
+		(6,3),
+		(8,2),
+		(10,2),
+		(12,2),
+	]);
+	for n in 1..4 {
+		for half_d in 1..7 {
+			let d = 2*half_d;
+			let exp = format!("{}d{}!", n, d);
+			let max_explosions = max_explodes_by_die_type[&d];
+			let expected = dicexp::DiceRoll{
+				total: 0, min: n, max: n * d * max_explosions as i64,
+				average: montecarlo_exploding_dice_average(n as u32, d as u32, max_explosions, 12345, 10000, 10)
+			};
+			let result = dice_bag.eval(&exp).unwrap();
+			assert_eq!(result.min, expected.min);
+			assert_eq!(result.max, expected.max);
+			assert_close(result.average, expected.average, 0.05);
+		}
 	}
-	let mut actual_ave = sum as f64 / reps as f64;
-	assert!(actual_ave > 500.*0.9 && actual_ave < 500.*1.1, "average of {} rolls too far from the expected mean", reps);
 }
 
 /// run with `cargo test test_montecarlo_exploding_dice_average -- --no-capture` to see output
