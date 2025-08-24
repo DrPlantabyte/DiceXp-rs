@@ -92,7 +92,7 @@ fn exploding_dice_unlimited() {
 			let max_explosions = max_explodes_by_die_type[&d];
 			let expected = dicexp::DiceRoll{
 				total: 0, min: n, max: n * d * max_explosions as i64,
-				average: montecarlo_exploding_dice_average(n as u32, d as u32, max_explosions, 12345, 10000, 10)
+				average: montecarlo_exploding_dice_average(n as u32, d as u32, d as u32, max_explosions, 12345, 10000, 10)
 			};
 			let result = dice_bag.eval(&exp).unwrap();
 			assert_eq!(result.min, expected.min);
@@ -108,10 +108,10 @@ fn test_montecarlo_exploding_dice_average(){
 	for n in 1..4 {
 		for half_d in 1..7 {
 			let d = 2*half_d;
-			let non_explode_ave = montecarlo_exploding_dice_average(n, d, 0, 12345, 10000, 10);
+			let non_explode_ave = montecarlo_exploding_dice_average(n, d, d, 0, 12345, 10000, 10);
 			print!("{}d{} average: {}", n, d, non_explode_ave);
 			assert_close(non_explode_ave, n as f64 * (d as f64 + 1.) / 2., 0.05);
-			let exploding_ave = montecarlo_exploding_dice_average(n, d, 999, 12345, 10000, 10);
+			let exploding_ave = montecarlo_exploding_dice_average(n, d, d, 999, 12345, 10000, 10);
 			println!("\t{}d{}! average: {}", n, d, exploding_ave);
 			assert!(exploding_ave > non_explode_ave);
 			if d >= 4 {
@@ -120,15 +120,17 @@ fn test_montecarlo_exploding_dice_average(){
 		}
 		println!()
 	}
-	
+
 }
 
 /// Simulate a lartge number of dice rolls and return the average (returns an average of averages)
-fn montecarlo_exploding_dice_average(n: u32, d: u32, max_explodes: u32, seed: u64, num_iters: u32, num_sims: u32) -> f64 {
+fn montecarlo_exploding_dice_average(n: u32, d: u32, x: u32, max_explodes: u32, seed: u64, num_iters: u32, num_sims: u32) -> f64 {
 	use rand::rngs::StdRng;
 	use rand::SeedableRng;
 	let mut seed_rng = StdRng::seed_from_u64(seed);
 	let mut sum_of_sims = 0.;
+	assert!(d > 1);
+	assert!(x > 1);
 	// loop simulations
 	for _ in 0..num_sims {
 		let mut rng = StdRng::seed_from_u64(seed_rng.next_u64());
@@ -142,7 +144,7 @@ fn montecarlo_exploding_dice_average(n: u32, d: u32, max_explodes: u32, seed: u6
 				loop {
 					roll = rng.next_u32() % d + 1;
 					sum += roll as f64;
-					if explosions >= max_explodes || roll != d { break; }
+					if explosions >= max_explodes || roll < x { break; }
 					explosions += 1;
 				}
 			}
