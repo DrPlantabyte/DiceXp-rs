@@ -1,3 +1,4 @@
+use rand::RngCore;
 use dicexp;
 
 #[test]
@@ -76,7 +77,7 @@ fn fate_dice() {
 fn exploding_dice_unlimited() {
 	let mut dice_bag = dicexp::new_dice_bag_from_seed(12345);
 	let exp = "1d6";
-	let expected = dicexp::DiceRoll{min: 1, max: 6 * 4, average: 3.5 + (1./6.)*(6.+3.5)};
+	let expected = dicexp::DiceRoll{min: 1, max: 6 * 4, average: 3.5 + (1./6.)*(6.+3.5), total: 0};
 	let mut sum = 0;
 	let reps = 1000;
 	for _ in 0..reps {
@@ -89,4 +90,60 @@ fn exploding_dice_unlimited() {
 	}
 	let mut actual_ave = sum as f64 / reps as f64;
 	assert!(actual_ave > 500.*0.9 && actual_ave < 500.*1.1, "average of {} rolls too far from the expected mean", reps);
+}
+
+/// run with `cargo test test_montecarlo_exploding_dice_average -- --no-capture` to see output
+#[test]
+fn test_montecarlo_exploding_dice_average(){
+	for n in 1..4 {
+		for half_d in 1..7 {
+			let d = 2*half_d;
+			let non_explode_ave = montecarlo_exploding_dice_average(n, d, 0, 12345, 10000, 10);
+			print!("{}d{} average: {}", n, d, non_explode_ave);
+			assert_close(non_explode_ave, n as f64 * (d as f64 + 1.) / 2., 0.05);
+			let exploding_ave = montecarlo_exploding_dice_average(n, d, 999, 12345, 10000, 10);
+			println!("\t{}d{}! average: {}", n, d, exploding_ave);
+			assert!(exploding_ave > non_explode_ave);
+			if d >= 4 {
+				assert!(exploding_ave < non_explode_ave + n as f64);
+			}
+		}
+		println!()
+	}
+	
+}
+
+/// Simulate a lartge number of dice rolls and return the average (returns an average of averages)
+fn montecarlo_exploding_dice_average(n: u32, d: u32, max_explodes: u32, seed: u64, num_iters: u32, num_sims: u32) -> f64 {
+	use rand::rngs::StdRng;
+	use rand::SeedableRng;
+	let mut seed_rng = StdRng::seed_from_u64(seed);
+	let mut sum_of_sims = 0.;
+	// loop simulations
+	for _ in 0..num_sims {
+		let mut rng = StdRng::seed_from_u64(seed_rng.next_u64());
+		let mut sum = 0.;
+		// loop num repetitions in the simulation
+		for _ in 0..num_iters {
+			// loop n dice
+			for _ in 0..n {
+				let mut explosions = 0;
+				let mut roll;
+				loop {
+					roll = rng.next_u32() % d + 1;
+					sum += roll as f64;
+					if explosions >= max_explodes || roll != d { break; }
+					explosions += 1;
+				}
+			}
+		}
+		let ave = sum / num_iters as f64;
+		sum_of_sims += ave;
+	}
+	sum_of_sims / num_sims as f64
+}
+
+fn assert_close(a: f64, b: f64, t: f64) {
+	let delta = (a - b).abs();
+	assert!(delta < t, "near-equality check failed: difference between {} and {} is beyond tolerance {}", a, b, t);
 }
