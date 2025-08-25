@@ -74,22 +74,23 @@ fn fate_dice() {
 }
 
 #[test]
-fn exploding_dice_unlimited() {
+fn exploding_dice() {
 	use std::collections::HashMap;
 	let mut dice_bag = dicexp::new_dice_bag_from_seed(12345);
-	let max_explodes_by_die_type = HashMap::<i64, u32>::from([
-		(2,7),
-		(4,4),
-		(6,3),
-		(8,2),
-		(10,2),
-		(12,2),
+	let max_explodes_by_die_type = HashMap::<i64, [u32;3]>::from([
+		// num explosions is array for 1, 2, and 3 exploding sides
+		(2,[7,0,0]),
+		(4,[4,7,17]),
+		(6,[3,5,7]),
+		(8,[3,4,5]),
+		(10,[2,3,4]),
+		(12,[2,3,4]),
 	]);
-	for n in 1..4 {
-		for half_d in 1..7 {
+	for n in 1..=3 {
+		for half_d in 1..=6 {
 			let d = 2*half_d;
 			let exp = format!("{}d{}!", n, d);
-			let max_explosions = max_explodes_by_die_type[&d];
+			let max_explosions = max_explodes_by_die_type[&d][0];
 			let expected = dicexp::DiceRoll{
 				total: 0, min: n, max: n * d * max_explosions as i64,
 				average: montecarlo_exploding_dice_average(n as u32, d as u32, &[d as u32], max_explosions, 12345, 10000, 10)
@@ -98,6 +99,27 @@ fn exploding_dice_unlimited() {
 			assert_eq!(result.min, expected.min);
 			assert_eq!(result.max, expected.max);
 			assert_close(result.average, expected.average, 0.05);
+			if d >= 6 {
+				// test multi-explode stats
+				for num_x_sides in 1..=3 {
+					let mut x_nums: Vec<u32> =  Vec::new();
+					for x in (d-num_x_sides+1)..=d {
+						x_nums.push(x as u32);
+					}
+					let max_explosions = max_explodes_by_die_type[&d][(num_x_sides -1) as usize];
+					let expected = dicexp::DiceRoll{
+						total: 0, min: n, max: n * d * max_explosions as i64,
+						average: montecarlo_exploding_dice_average(n as u32, d as u32, x_nums.as_slice(), max_explosions, 12345, 10000, 10)
+					};
+					let exp = format!(
+						"{}d{}![{}]", n, d, x_nums.iter().map(|n| n.to_string()).collect::<Vec<String>>().join(",")
+					);
+					let result = dice_bag.eval(&exp).unwrap();
+					assert_eq!(result.min, expected.min);
+					assert_eq!(result.max, expected.max);
+					assert_close(result.average, expected.average, 0.05);
+				}
+			}
 		}
 	}
 }
@@ -119,9 +141,9 @@ fn test_montecarlo_exploding_dice_average(){
 			}
 			if d >= 6 {
 				// multi-explodes
-				for k in 2..=3 {
+				for num_x_sides in 2..=3 {
 					let mut x_nums: Vec<u32> =  Vec::new();
-					for x in (d-k)..d {
+					for x in (d-num_x_sides+1)..=d {
 						x_nums.push(x);
 					}
 					let exploding_ave = montecarlo_exploding_dice_average(n, d, x_nums.as_slice(), 999, 12345, 10000, 10);
