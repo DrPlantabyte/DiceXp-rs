@@ -92,7 +92,7 @@ fn exploding_dice_unlimited() {
 			let max_explosions = max_explodes_by_die_type[&d];
 			let expected = dicexp::DiceRoll{
 				total: 0, min: n, max: n * d * max_explosions as i64,
-				average: montecarlo_exploding_dice_average(n as u32, d as u32, d as u32, max_explosions, 12345, 10000, 10)
+				average: montecarlo_exploding_dice_average(n as u32, d as u32, &[d as u32], max_explosions, 12345, 10000, 10)
 			};
 			let result = dice_bag.eval(&exp).unwrap();
 			assert_eq!(result.min, expected.min);
@@ -105,18 +105,30 @@ fn exploding_dice_unlimited() {
 /// run with `cargo test test_montecarlo_exploding_dice_average -- --no-capture` to see output
 #[test]
 fn test_montecarlo_exploding_dice_average(){
-	for n in 1..4 {
-		for half_d in 1..7 {
+	for n in 1..=3 {
+		for half_d in 1..=6 {
 			let d = 2*half_d;
-			let non_explode_ave = montecarlo_exploding_dice_average(n, d, d, 0, 12345, 10000, 10);
+			let non_explode_ave = montecarlo_exploding_dice_average(n, d, &[d], 0, 12345, 10000, 10);
 			print!("{}d{} average: {}", n, d, non_explode_ave);
 			assert_close(non_explode_ave, n as f64 * (d as f64 + 1.) / 2., 0.05);
-			let exploding_ave = montecarlo_exploding_dice_average(n, d, d, 999, 12345, 10000, 10);
-			println!("\t{}d{}! average: {}", n, d, exploding_ave);
+			let exploding_ave = montecarlo_exploding_dice_average(n, d, &[d], 999, 12345, 10000, 10);
+			print!("\t{}d{}! average: {}", n, d, exploding_ave);
 			assert!(exploding_ave > non_explode_ave);
 			if d >= 4 {
 				assert!(exploding_ave < non_explode_ave + n as f64);
 			}
+			if d >= 6 {
+				// multi-explodes
+				for k in 2..=3 {
+					let mut x_nums: Vec<u32> =  Vec::new();
+					for x in (d-k)..d {
+						x_nums.push(x);
+					}
+					let exploding_ave = montecarlo_exploding_dice_average(n, d, x_nums.as_slice(), 999, 12345, 10000, 10);
+					print!("\t{}d{}!{:?} average: {}", n, d, x_nums, exploding_ave);
+				}
+			}
+			println!()
 		}
 		println!()
 	}
@@ -124,13 +136,15 @@ fn test_montecarlo_exploding_dice_average(){
 }
 
 /// Simulate a lartge number of dice rolls and return the average (returns an average of averages)
-fn montecarlo_exploding_dice_average(n: u32, d: u32, x: u32, max_explodes: u32, seed: u64, num_iters: u32, num_sims: u32) -> f64 {
+fn montecarlo_exploding_dice_average(n: u32, d: u32, x: &[u32], max_explodes: u32, seed: u64, num_iters: u32, num_sims: u32) -> f64 {
 	use rand::rngs::StdRng;
 	use rand::SeedableRng;
+	use std::collections::HashSet;
 	let mut seed_rng = StdRng::seed_from_u64(seed);
 	let mut sum_of_sims = 0.;
+	let explode_set: HashSet<u32> = HashSet::from_iter(x.iter().cloned());
 	assert!(d > 1);
-	assert!(x > 1);
+	assert!(explode_set.len() < d as usize);
 	// loop simulations
 	for _ in 0..num_sims {
 		let mut rng = StdRng::seed_from_u64(seed_rng.next_u64());
@@ -144,7 +158,7 @@ fn montecarlo_exploding_dice_average(n: u32, d: u32, x: u32, max_explodes: u32, 
 				loop {
 					roll = rng.next_u32() % d + 1;
 					sum += roll as f64;
-					if explosions >= max_explodes || roll < x { break; }
+					if explosions >= max_explodes || !explode_set.contains(&roll) { break; }
 					explosions += 1;
 				}
 			}
