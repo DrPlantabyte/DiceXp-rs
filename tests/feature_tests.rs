@@ -167,6 +167,11 @@ fn explode_n_dice() {
 	}
 }
 
+#[test]
+fn test_shadowrun() {
+	
+}
+
 
 
 /// run with `cargo test test_montecarlo_exploding_dice_average -- --no-capture` to see output
@@ -202,7 +207,7 @@ fn test_montecarlo_exploding_dice_average(){
 
 }
 
-/// Simulate a lartge number of dice rolls and return the average (returns an average of averages)
+/// Simulate a large number of dice rolls and return the average (returns an average of averages)
 fn montecarlo_exploding_dice_average(n: u32, d: u32, x: &[u32], max_explodes: u32, seed: u64, num_iters: u32, num_sims: u32) -> f64 {
 	use rand::rngs::StdRng;
 	use rand::SeedableRng;
