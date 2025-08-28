@@ -124,6 +124,51 @@ fn exploding_dice() {
 	}
 }
 
+#[test]
+fn explode_n_dice() {
+	let mut dice_bag = dicexp::new_dice_bag_from_seed(12345);
+	for n in 1..=3 {
+		for half_d in 1..=6 {
+			for max_explosions in 0..=2{
+				let d = 2*half_d;
+				let exp = format!("{}d{}!{}", n, d, max_explosions);
+				let expected = dicexp::DiceRoll{
+					total: 0, min: n, max: n * d * max_explosions as i64,
+					average: montecarlo_exploding_dice_average(n as u32, d as u32, &[d as u32], max_explosions, 12345, 10000, 10)
+				};
+				let result = dice_bag.eval(&exp).unwrap();
+				assert_eq!(result.min, expected.min);
+				assert_eq!(result.max, expected.max);
+				assert_close(result.average, expected.average, 0.05);
+				if d >= 6 {
+					// test multi-explode stats
+					for num_x_sides in 1..=3 {
+						let mut x_nums: Vec<u32> = Vec::new();
+						for x in (d - num_x_sides + 1)..=d {
+							x_nums.push(x as u32);
+						}
+						let expected = dicexp::DiceRoll {
+							total: 0,
+							min: n,
+							max: n * d * max_explosions as i64,
+							average: montecarlo_exploding_dice_average(n as u32, d as u32, x_nums.as_slice(), max_explosions, 12345, 10000, 10)
+						};
+						let exp = format!(
+							"{}d{}!{}[{}]", n, d, max_explosions, x_nums.iter().map(|n| n.to_string()).collect::<Vec<String>>().join(",")
+						);
+						let result = dice_bag.eval(&exp).unwrap();
+						assert_eq!(result.min, expected.min);
+						assert_eq!(result.max, expected.max);
+						assert_close(result.average, expected.average, 0.05);
+					}
+				}
+			}
+		}
+	}
+}
+
+
+
 /// run with `cargo test test_montecarlo_exploding_dice_average -- --no-capture` to see output
 #[test]
 fn test_montecarlo_exploding_dice_average(){

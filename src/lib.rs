@@ -16,37 +16,69 @@ pub enum DiceRollMechanic {
 	Standard,
 	/**
 	Exploding dice: when the highest (or specified) number ir rolled, add another die to the
-	dice pool and roll that one too (which can also explode). Note that the maximum possilble
+	dice pool and roll that one too (which can also explode). Note that the maximum possible
 	value for an exploding dice roll is infinite, so the range is limited to the 99th percentile
 	(3 consecutive explosions for most dice), or more formally:
+
 	`N = ceil( log[0.01]/log[ (number of exploding numbers)/(number of sides on die) ] )`
+
+	Syntax: `1d6![5,6]` or `1d6!>4` or `1d6!>=5` = roll 1d6, explode on 5 or 6 (omitting the `[]`
+	square brackets	implies highest number on the die, eg `1d6!`)
 	*/
 	Exploding,
-	/// Same as `Exploding`, except with a limit on maximum number of dice added to the pool
+	/**
+	Same as `Exploding`, except with a limit on maximum number of dice added to the pool
+	Syntax: `1d6!2[5,6]` or `1d6!2>4` = roll 1d6, explode on 5 or 6, no more than 2 explosions
+	(omitting the `[]` square brackets implies highest number on the die, and omitting the number
+	after the `!` means unlimited number of explosions, see above)
+	*/
 	ExplodeN,
-	/// Keep highest N dice and add them together
+	/// Keep highest N dice and add them together. Syntax: `4d6kh3` or `4d6k3` = roll 4d6, keep
+	/// highest 3
 	KeepHighest,
-	/// Keep lowest N dice and add them together
+	/// Keep lowest N dice and add them together. Syntax: `4d6kl3` = roll 4d6, keep lowest 3
 	KeepLowest,
-	/// Drop highest N dice and add them together
+	/// Drop highest N dice and add them together. Syntax: `4d6dh3` = roll 4d6, drop highest 3
 	DropHighest,
-	/// Drop lowest N dice and add them together
+	/// Drop lowest N dice and add them together. Syntax: `4d6dl1` or `4d6d1` = roll 4d6, drop
+	/// lowest 1
 	DropLowest,
-	/// Count: instead of summing the dice, return the number of times a given number or set of
-	/// numbers appears
+	/**
+	Instead of summing the dice, return the number of times a given number or set of
+	numbers appears. Syntax: `5d6c[5,6]` or `5d6c>4` = roll 5d6, count number of 5's and 6's
+	(omitting the `[]` square brackets implies highest number on the die). `cs` is also accepted in
+	the place of `c` to conform to Roll20.net syntax
+	*/
 	Count,
 	/**
 	Max count: instead of summing the dice, return the number of repetitions for the number with the
 	most repetitions (eg if you roll three dice and get `[6, 4, 4]`, then the result will be `2`
-	because there are two 4's). This supports the dice mechanic from
-	[Burn Bryte](https://roll20.net/compendium/burnbryte/Skills#toc_5) where you don't sum the dice,
-	but instead a roll is a failure if the same number appears twice (or more) in the dice roll
+	because there are two 4's).
+	Syntax: `5d6bc` = roll 5d6 and count the number of occurrences of the most frequent number
 	*/
-	MaxCount,
+	BestCount,
+	/**
+	Same as `BestCount`, except output is 0 (no doubles) or 1 (two or more of same number). This 
+	is the dice mechanic from [Burn Bryte](https://roll20.net/compendium/burnbryte/Skills#toc_5)
+	where you don't sum the dice, but instead a roll a pool of dice and the test is a failure if
+	the same number appears twice (or more) in the dice roll.
+	Syntax: `3d6bb` = roll 3d6 and evaluate to 1 if you roll a double or triple, otherwise 0
+	*/
+	BestCountBoolean,
+	/**
+	Like count, except with exploding dice (max die mumber, no explosion limit).
+	Syntax: `3d6!c[5,6]` or `3d6!c>4` = roll `1d6!` 3 times and count number of 5's and 6's after
+	resolving the exploding dice (ie rolls of `4`, `6+2`, and `5` evaluates to 2 for `3d6!c>4`, but
+	would resolve to 1 for `3d6!c>7`
+	*/
+	CountExploding,
 	/// Like `Standard`, except re-roll specific numbers on the die, using the new result even if it
-	/// is the same
+	/// is the same. Syntax: `1d20ro[1]` = Roll 1d20, but re-roll it if it is a 1 and keep the new
+	/// roll even if it is also a 1
 	ReRollOnce,
 	/// Like `Standard`, except re-roll specific numbers until they no longer come up
+	/// Syntax: `2d8r[1,2]` or `2d8r<3` or `2d8r<=2` == roll 2d8, rerolling any 1's or 2's until
+	/// there are no more 1's or 2's
 	ReRoll,
 }
 
@@ -127,16 +159,7 @@ impl <R> DiceBag<R> where R: rand::Rng {
 	pub fn roll_special(&mut self, n: u32, d: u32, rule: DiceRollMechanic) -> i64 {
 		match rule {
 			DiceRollMechanic::Standard => self.roll(n, d, 0),
-			DiceRollMechanic::Exploding => {todo!()}
-			DiceRollMechanic::ExplodeN => {todo!()}
-			DiceRollMechanic::KeepHighest => {todo!()}
-			DiceRollMechanic::KeepLowest => {todo!()}
-			DiceRollMechanic::DropHighest => {todo!()}
-			DiceRollMechanic::DropLowest => {todo!()}
-			DiceRollMechanic::Count => {todo!()}
-			DiceRollMechanic::MaxCount => {todo!()}
-			DiceRollMechanic::ReRollOnce => {todo!()}
-			DiceRollMechanic::ReRoll => {todo!()}
+			_ => todo!("Not implemented yet!")
 		}
 	}
 
