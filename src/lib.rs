@@ -8,6 +8,8 @@ use rand;
 #[cfg(feature = "serde_support")]
 use serde::{Deserialize, Serialize};
 
+mod parser;
+
 /// The DiceBag struct is use to evaluate RPG dice notation expressions (eg "2d6+3")
 ///
 /// If the provided RNG implements any of `Debug`, `Clone`, `PartialEq`, `Eq`, `Hash`, or `Default`,
