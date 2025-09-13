@@ -29,3 +29,23 @@ fn join_patterns<T>(patterns: &Vec<TokenDef<T>>) -> String {
 	super_pattern += "|(?P<UNMATCHED>.+)";
 	return super_pattern;
 }
+
+#[test]
+fn test_join_patterns() {
+	let token_constructor = |s: &str| String::from(s);
+	let toks = vec![
+		TokenDef{pattern: Regex::new(r"\d+").unwrap(), constructor: token_constructor},
+		TokenDef{pattern: Regex::new(r"\w+").unwrap(), constructor: token_constructor},
+		TokenDef{pattern: Regex::new(r"\s+").unwrap(), constructor: token_constructor},
+	];
+	let result = join_patterns(&toks);
+	println!("join_patterns({:?}) -> {:?}", toks, result);
+	let text = "Bob and 23 birds.";
+	let captures = Regex::new(result.as_str()).unwrap().captures_iter(text).collect::<Vec<_>>();
+	println!("text: {}", text);
+	for cap in captures {
+		let (name, groups) = cap.extract();
+		println!("capture '{}': {:?}", name, groups.iter().collect::<Vec<_>>());
+	}
+	todo!()
+}
