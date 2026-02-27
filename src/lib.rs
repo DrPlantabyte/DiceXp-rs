@@ -4,7 +4,7 @@ use core::fmt::{Debug, Formatter};
 use std::collections::HashSet;
 use std::hash::Hasher;
 use std::num::{ParseFloatError, ParseIntError};
-use rand;
+use rand::prelude::*;
 #[cfg(feature = "serde_support")]
 use serde::{Deserialize, Serialize};
 
@@ -22,15 +22,15 @@ use serde::{Deserialize, Serialize};
 /// println!("Rolled {}: {}", dice_exp, dice_roll);
 /// println!("The average result is {:.1}", dice_roll.average);
 /// ```
-pub struct DiceBag <R: rand::Rng>{
+pub struct DiceBag <R: RngExt>{
 	rng: R
 }
-impl <R>Clone for DiceBag<R> where R: rand::Rng+Clone{
+impl <R>Clone for DiceBag<R> where R: RngExt+Clone{
 	fn clone(&self) -> Self {
 		DiceBag{rng: self.rng.clone()}
 	}
 }
-impl <R>Debug for DiceBag<R> where R: rand::Rng+Debug{
+impl <R>Debug for DiceBag<R> where R: RngExt+Debug{
 	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
 		write!(f, "DiceBag{{")?;
 		self.rng.fmt(f)?;
@@ -38,27 +38,27 @@ impl <R>Debug for DiceBag<R> where R: rand::Rng+Debug{
 	}
 }
 
-impl <R>PartialEq for DiceBag<R> where R: rand::Rng+PartialEq{
+impl <R>PartialEq for DiceBag<R> where R: RngExt+PartialEq{
 	fn eq(&self, other: &Self) -> bool {
 		self.rng.eq(&other.rng)
 	}
 }
 
-impl <R>Eq for DiceBag<R> where R: rand::Rng+Eq{}
+impl <R>Eq for DiceBag<R> where R: RngExt+Eq{}
 
-impl <R> std::hash::Hash for DiceBag<R> where R: rand::Rng+std::hash::Hash{
+impl <R> std::hash::Hash for DiceBag<R> where R: RngExt+std::hash::Hash{
 	fn hash<H: Hasher>(&self, state: &mut H) {
 		self.rng.hash(state)
 	}
 }
 
-impl <R>Default for DiceBag<R> where R: rand::Rng+Default{
+impl <R>Default for DiceBag<R> where R: RngExt+Default{
 	fn default() -> Self {
 		DiceBag{rng: R::default()}
 	}
 }
 
-impl <R> DiceBag<R> where R: rand::Rng {
+impl <R> DiceBag<R> where R: RngExt {
 	/// Constructs a new `DiceBag` instance
 	/// # Parameters
 	/// * `rng`: A random number generator to use for rolling dice
@@ -400,24 +400,14 @@ impl Error for SyntaxError {}
 /// [rand crate](https://crates.io/crates/rand) `rand::rngs::StdRng` RNG
 /// # Parameters
 /// * `seed`: A 64-bit number to use as a seed
-pub fn simple_rng(seed: u64) -> rand::rngs::StdRng {
-	use rand::rngs::{StdRng};
-	use rand::{SeedableRng, TryRngCore};
-	let mut seeder_rng_seed: <StdRng as SeedableRng>::Seed = <StdRng as SeedableRng>::Seed::default();
-	let sub_seed: [u8; 8] = bytemuck::cast(seed);
-	for i in 0..seeder_rng_seed.len() {
-		seeder_rng_seed[i] = sub_seed[i % sub_seed.len()];
-	}
-	let mut seeder_rng = StdRng::from_seed(seeder_rng_seed);
-	let mut rng_seed: <StdRng as SeedableRng>::Seed = <StdRng as SeedableRng>::Seed::default();
-	seeder_rng.try_fill_bytes(&mut rng_seed).expect("Failed to seed RNG");
-	return StdRng::from_seed(rng_seed);
+pub fn simple_rng(seed: u64) -> StdRng {
+	StdRng::seed_from_u64(seed)
 }
 
 /// Creates a new random number generator (RNG) from the provided seed using the default
 /// [rand crate](https://crates.io/crates/rand) `rand::rngs::StdRng` RNG, using the current system
 /// millisecond timestamp as the RNG seed
-pub fn new_simple_rng() -> rand::rngs::StdRng {
+pub fn new_simple_rng() -> StdRng {
 	use std::time::{SystemTime, UNIX_EPOCH};
 	let time_seed = SystemTime::now().duration_since(UNIX_EPOCH)
 		.expect("Invalid system time").as_millis() as u64;
